@@ -1,0 +1,53 @@
+# configs/default.yaml
+
+# ── Data ───────────────────────────────────────
+raw_data_dir: "data/raw"
+proc_data_dir: "data/processed"
+captions_file: "data/captions.jsonl"
+latent_dir: "data/latents"
+
+# ── Download ────────────────────────────────────
+download:
+  query:
+    - "Renaissance sculpture"
+    - "David Michelangelo"
+    - "Donatello sculpture"
+    - "Baroque marble statue"
+  per_page: 30
+  total_pages: 200
+
+# ── Preprocessing ───────────────────────────────
+preprocess:
+  target_size: [512, 512]
+  quality: 95
+
+# ── VAE hyperparams (later) ────────────────────
+vae:
+  latent_dim: 4
+  channels: 128
+  kl_beta: 0.001
+  lr: 1e-4
+  batch_size: 8
+  epochs: 100
+  output_dir: "models/vae"
+  encoder_path: "models/vae/enc.pth"
+  decoder_path: "models/vae/dec.pth"
+
+# ── UNet hyperparams (later) ───────────────────
+unet:
+  timesteps: 1000
+  lr: 1e-4
+  batch_size: 2
+  grad_accum_steps: 4
+  max_steps: 20000
+  ckpt_every: 1000
+  guidance_scale: 7.5
+
+# ── Runtime ────────────────────────────────────
+device: "cuda"
+mixed_precision: "fp16"
+seed: 42
+
+# ── Outputs ────────────────────────────────────
+output_dir: "checkpoints"
+log_dir: "logs"
