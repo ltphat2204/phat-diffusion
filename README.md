@@ -38,8 +38,8 @@ source .venv/bin/activate
 
 ```bash
 pip install --upgrade pip
-pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117
-pip install diffusers transformers accelerate safetensors datasets pillow tqdm pyyaml requests einops xformers
+pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118 # Adjust for your CUDA version
+pip install -r requirements.txt
 ```
 
 ### 3. Configure
