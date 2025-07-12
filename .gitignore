@@ -12,3 +12,4 @@ models/
 # Editor scratch files
 *.swp
 .DS_Store
+.env
