@@ -28,7 +28,7 @@ vae:
   kl_beta: 0.001
   lr: 1e-4
   batch_size: 8
-  epochs: 100
+  epochs: 300
   output_dir: "models/vae"
   encoder_path: "models/vae/enc.pth"
   decoder_path: "models/vae/dec.pth"

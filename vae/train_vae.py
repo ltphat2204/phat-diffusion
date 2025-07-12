@@ -4,9 +4,9 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
-from torchvision.utils import save_image
 from PIL import Image
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from models import Encoder, Decoder, reparameterize
 
@@ -36,6 +36,8 @@ def load_config(path="configs/default.yaml"):
         return yaml.safe_load(f)
 
 def train_vae(cfg):
+    epoch_losses = []
+
     device = torch.device(cfg["device"] if torch.cuda.is_available() else "cpu")
     mf     = torch.channels_last
 
@@ -56,7 +58,7 @@ def train_vae(cfg):
     ds = ImageDataset(cfg["proc_data_dir"], transform=transform)
     dl = DataLoader(
         ds, batch_size=batch_size, shuffle=True,
-        num_workers=4, pin_memory=True,
+        num_workers=8, pin_memory=True,
         drop_last=True, persistent_workers=True, prefetch_factor=2
     )
 
@@ -96,13 +98,23 @@ def train_vae(cfg):
             opt.step()
 
             running_loss += loss.item()
-            loop.set_postfix(avg_loss=running_loss / (loop.n + 1))
+            avg = running_loss / len(dl)
+            epoch_losses.append(avg)
+            loop.set_postfix(avg_loss=avg)
 
         # overwrite a rolling checkpoint each epoch
         torch.save(enc.state_dict(), os.path.join(ckpt_dir, "enc_latest.pth"))
         torch.save(dec.state_dict(), os.path.join(ckpt_dir, "dec_latest.pth"))
 
     print("✅ VAE training complete! Checkpoints at:", ckpt_dir)
+
+    epochs = list(range(1, len(epoch_losses)+1))
+    plt.figure()
+    plt.plot(epochs, epoch_losses)
+    plt.xlabel("Epoch")
+    plt.ylabel("Average Loss")
+    plt.title("VAE Training Loss Curve")
+    plt.show()
 
 if __name__ == "__main__":
     cfg = load_config()
