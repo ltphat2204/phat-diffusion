@@ -23,10 +23,11 @@ preprocess:
 
 # ── VAE hyperparams (later) ────────────────────
 vae:
-  latent_dim: 4
-  channels: 128
-  kl_beta: 0.001
-  lr: 1e-4
+  latent_dim: 8
+  channels: 256
+  kl_beta: 0.1
+  lr: 1e-5
+  perc_weight: 1.0
   batch_size: 8
   epochs: 300
   output_dir: "models/vae"
