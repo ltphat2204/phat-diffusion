@@ -57,23 +57,29 @@ def main():
     tokenizer    = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
     text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-base-patch32")\
                                   .to(device).eval()
-    clip_dim     = text_encoder.config.hidden_size
-    cross_dim    = unet.config.cross_attention_dim
-    proj         = torch.nn.Linear(clip_dim, cross_dim).to(device)
+    clip_dim  = text_encoder.config.hidden_size
+    cross_dim = unet.config.cross_attention_dim
+    proj      = torch.nn.Linear(clip_dim, cross_dim).to(device)
 
     # ── Tokenize prompt & get text embeddings ───────────
-    tokens     = tokenizer(args.prompt, padding="max_length", truncation=True,
-                           max_length=77, return_tensors="pt")
-    input_ids  = tokens.input_ids.to(device)
-    attn_mask  = tokens.attention_mask.to(device)
+    tokens    = tokenizer(
+        args.prompt,
+        padding="max_length",
+        truncation=True,
+        max_length=77,
+        return_tensors="pt"
+    )
+    input_ids = tokens.input_ids.to(device)
+    attn_mask = tokens.attention_mask.to(device)
     with torch.no_grad():
         clip_emb = text_encoder(input_ids, attention_mask=attn_mask)[0]
     text_emb = proj(clip_emb)
 
-    # ── Prepare initial latent noise ───────────────────
-    latent_dim = int(cfg["vae"]["latent_dim"])
-    latents    = torch.randn((1, latent_dim, 1, 1), device=device)
-    latents    = latents.to(device=device, memory_format=mf)
+    # ── Prepare initial spatial latent noise ────────────
+    latent_dim   = int(cfg["vae"]["latent_dim"])
+    spatial_size = 32  # matches VAE downsample (512→256→128→64→32)
+    latents = torch.randn((1, latent_dim, spatial_size, spatial_size), device=device)
+    latents = latents.to(device=device, memory_format=mf)
 
     # ── Denoising loop (DDIM) ─────────────────────────
     for t in scheduler.timesteps:
@@ -82,10 +88,10 @@ def main():
         latents = scheduler.step(noise_pred, t, latents, eta=0.0).prev_sample
 
     # ── Decode latent → image ─────────────────────────
-    z   = latents.squeeze(-1).squeeze(-1)
     with torch.no_grad():
-        img = dec(z)  # [1,3,512,512]
-    img = (img + 1) * 0.5  # [-1,1] → [0,1]
+        img = dec(latents)  # [1,3,512,512]
+    img = (img + 1) * 0.5  # map from [-1,1] to [0,1]
+    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     save_image(img, args.out)
 
     print(f"✨ Generated image saved to {args.out}")

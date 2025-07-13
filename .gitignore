@@ -13,3 +13,5 @@ models/
 *.swp
 .DS_Store
 .env
+
+outputs/
